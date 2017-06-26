@@ -18,7 +18,7 @@ class MY_Controller extends CI_Controller
      * The current request's view. Automatically guessed
      * from the name of the controller and action
      */
-    protected $view = '';
+    protected $view = FALSE;
 
     /**
      * An array of variables to be passed through to the
@@ -52,6 +52,11 @@ class MY_Controller extends CI_Controller
      * A list of helpers to be autoloaded
      */
     protected $helpers = array();
+    
+    /**
+     * A list of groups to be autoloaded
+     */
+    protected $groups = array();
 
     /* --------------------------------------------------------------
      * GENERIC METHODS
@@ -67,6 +72,7 @@ class MY_Controller extends CI_Controller
 
         $this->_load_models();
         $this->_load_helpers();
+        $this->_login_check();
     }
 
     /* --------------------------------------------------------------
@@ -198,4 +204,23 @@ class MY_Controller extends CI_Controller
             $this->load->helper($helper);
         }
     }
+    
+    public function _login_check()
+	{
+        if (!$this->ion_auth->logged_in())
+		{
+			// redirect them to the login page
+			redirect('auth/login', 'refresh');
+		}else{
+		    $controller_clas_name = $this->router->fetch_class();
+		    $group = array_merge($this->groups);
+		    
+		    if (!$this->ion_auth->in_group($group))
+    		{
+                die("<h4>Access denied</h4>");
+    		}
+		    
+		}
+		
+	}
 }

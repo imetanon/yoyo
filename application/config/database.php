@@ -73,12 +73,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $active_group = 'default';
 $query_builder = TRUE;
 
+$servername = getenv('IP');
+$username = getenv('C9_USER');
+$password = "";
+$database = "yoyo";
+$dbport = 3306;
+
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => 'localhost',
-	'username' => '',
+	'hostname' => $servername,
+	'username' => $username,
 	'password' => '',
-	'database' => '',
+	'database' => $database,
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
 	'pconnect' => FALSE,

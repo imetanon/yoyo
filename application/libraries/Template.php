@@ -332,6 +332,7 @@ class Template
         $this->set('lang', str_replace('_', '-', $this->_ci->config->item('language')));
         $this->set('meta_charset', strtolower($this->_ci->config->item('charset')));
         $this->set('content', $this->_ci->load->view($view, $data, TRUE));
+        $this->set('menus', $this->load_menu());
 
         // handle site title
         $this->_data['site_title'] = '';
@@ -347,5 +348,56 @@ class Template
         }
         $this->_ci->load->view($this->_layout, $this->_data);
     }
+    
+    private function load_menu()
+    {
+        $this->_ci->load->model('setting_page_model', 'setting_page');
+		$setting_pages = $this->_ci->setting_page->order_by('sort_order', $order = 'ASC')->get_all();
+		
+		
+		// Create a multidimensional array to contain a list of items and parents
+        $menu_item = array(
+            'items' => array(),
+            'parents' => array()
+        );
+        // Builds the array lists with data from the menu table
+        foreach ($setting_pages as $page) {
+            // Creates entry into items array with current menu item id ie. $menu['items'][1]
+            $menu_item['items'][$page->setting_page_id] = $page;
+            // Creates entry into parents array. Parents array contains a list of all items with children
+            $menu_item['parents'][$page->setting_page_parent_id][] = $page->setting_page_id;
+        }
+		
+		
+		if ($menu_item) {
+            $result = $this->build_menu(0, $menu_item);
+            return $result;
+        } else {
+            return FALSE;
+        }
 
+    }
+    
+    function build_menu($parent, $menu_item) {
+        $menus = array();
+        if (isset($menu_item['parents'][$parent])) {
+            foreach ($menu_item['parents'][$parent] as $itemId) {
+                $page = $menu_item['items'][$itemId];
+                $menu = array();
+    	        $menu['name'] = $page->setting_page_name;
+    	        $menu['link'] = $page->setting_page_link;
+    	        $menu['controller'] = $page->setting_page_controller;
+    	        $menu['group'] = $page->setting_page_group;
+                if (!isset($menu_item['parents'][$itemId])) {
+        	        $menus[$page->setting_page_id]['detail'] = $menu;
+                }
+                if (isset($menu_item['parents'][$itemId])) {
+        	        $menus[$page->setting_page_id]['detail'] = $menu;
+        	        $menus[$page->setting_page_id]['submenus'][] = $this->build_menu($itemId, $menu_item);
+                }
+            }
+        }
+        return $menus;
+    }
+    
 }
